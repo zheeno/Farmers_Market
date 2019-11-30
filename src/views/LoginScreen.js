@@ -21,7 +21,7 @@ import { ImageBackground, Image, ScrollView } from 'react-native';
 import { styles } from '../../native-base-theme/variables/Styles';
 import { MiscModal } from './components/MiscComponents';
 import { ShowToast } from '../services/ApiCaller';
-// import Parse from 'parse/react-native';
+import Parse from 'parse/react-native';
 const Globals = require("../services/Globals");
 
 export default class LoginScreen extends Component {
@@ -38,7 +38,7 @@ export default class LoginScreen extends Component {
     this.componentDidMount = this.componentDidMount.bind(this);
     this.onSignUp = this.onSignUp.bind(this);
     this.onSignIn = this.onSignIn.bind(this);
-    this.updateCartTokens = this.updateCartTokens.bind(this);
+    // this.updateCartTokens = this.updateCartTokens.bind(this);
   }
 
   componentDidMount() {
@@ -54,55 +54,60 @@ export default class LoginScreen extends Component {
     let username = (this.state.username).trim(),
       password = (this.state.password).trim();
 
-    navigate('Home');
+    // navigate('Home');
     if (username === "" || password === "") {
       ShowToast('Fill the fields correctly.', 'danger');
     } else {
       this.setState({ isFetching: true });
-      // try {
-      //   await Parse.User.logIn(username.toString(), password.toString());
-      //   Parse.User.enableUnsafeCurrentUser();
-      //   Parse.User.currentAsync().then(user => {
-      //     let sessionToken = user.getSessionToken();
-      //     // check if user has any pending items in cart
-      //     // update those cart tokens with the latest token value
-      //     this.updateCartTokens(sessionToken, user.id);
-      //     navigate('Home');
-      //   }).catch(error => {
-      //     ShowToast(error.message, 'danger');
-      //   });
-      //   this.setState({ isFetching: false });
-      // } catch (error) {
-      //   this.setState({ isFetching: false });
-      //   ShowToast(Globals.ERRORS.INTERNET_CON, 'danger');
-      // }
+      try {
+        await Parse.User.logIn(username.toString(), password.toString());
+        Parse.User.enableUnsafeCurrentUser();
+        Parse.User.currentAsync().then(user => {
+          let sessionToken = user.getSessionToken();
+          let accountType = user.get("account_code");
+          // check if the user account is not a buyer account
+          if (accountType == Globals.ACCOUNT_TYPES.BUYER) {
+            // sign user out
+            Parse.User.logOut();
+            ShowToast("Your account is not supported", 'danger');
+          } else {
+            navigate('Home');
+          }
+        }).catch(error => {
+          ShowToast(error.message, 'danger');
+        });
+        this.setState({ isFetching: false });
+      } catch (error) {
+        this.setState({ isFetching: false });
+        ShowToast(error.message, 'danger');
+      }
     }
   }
 
-  async updateCartTokens(sessionToken, userId) {
-    // try {
-    //   const CartItems = Parse.Object.extend("CartItems");
-    //   const query = new Parse.Query(CartItems);
-    //   query.equalTo("buyer_user_id", userId);
-    //   query.equalTo("order_placed", false);
-    //   query.notEqualTo("cart_token", sessionToken);
-    //   const results = await query.find();
-    //   // Do something with the returned Parse.Object values
-    //   for (let i = 0; i < results.length; i++) {
-    //     var cartItemId = results[i];
-    //     // update entry with new token
-    //     const c_query = new Parse.Query("CartItems");
-    //     c_query.get(cartItemId.id).then(cartItem => {
-    //       cartItem.set("cart_token", sessionToken);
-    //       cartItem.save().then(objUpdate => {
-    //         console.log("updated", objUpdate);
-    //       });
-    //     });
-    //   }
-    // } catch (error) {
-    //   ShowToast(Globals.ERRORS.INTERNET_CON, "danger")
-    // }
-  }
+  // async updateCartTokens(sessionToken, userId) {
+  // try {
+  //   const CartItems = Parse.Object.extend("CartItems");
+  //   const query = new Parse.Query(CartItems);
+  //   query.equalTo("buyer_user_id", userId);
+  //   query.equalTo("order_placed", false);
+  //   query.notEqualTo("cart_token", sessionToken);
+  //   const results = await query.find();
+  //   // Do something with the returned Parse.Object values
+  //   for (let i = 0; i < results.length; i++) {
+  //     var cartItemId = results[i];
+  //     // update entry with new token
+  //     const c_query = new Parse.Query("CartItems");
+  //     c_query.get(cartItemId.id).then(cartItem => {
+  //       cartItem.set("cart_token", sessionToken);
+  //       cartItem.save().then(objUpdate => {
+  //         console.log("updated", objUpdate);
+  //       });
+  //     });
+  //   }
+  // } catch (error) {
+  //   ShowToast(Globals.ERRORS.INTERNET_CON, "danger")
+  // }
+  // }
 
   onSignUp = async () => {
     const { navigate } = this.props.navigation;

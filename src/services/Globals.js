@@ -6,5 +6,11 @@ module.exports = {
     ERRORS: {
         CONNECTION: 'Sorry, we are having some difficulties connecting to our servers.\nPlease check your internet connection.',
         INTERNET_CON: 'Please check your connection',
+    },
+    ACCOUNT_TYPES: {
+        BUYER: "001",
+        FARMER: "002",
+        SERVICE_PROVIDER: "003",
+        DEALER: "004"
     }
 };

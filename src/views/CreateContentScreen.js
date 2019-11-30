@@ -37,20 +37,25 @@ import {
 } from 'react-native';
 import { styles } from '../../native-base-theme/variables/Styles';
 import { GetData, ShowToast } from '../services/ApiCaller';
-import { LoaderOverlay, CreateFarmContentForm, CreateServiceContentForm } from './components/MiscComponents';
-import ImagePicker from 'react-native-image-crop-picker';
-// import Parse from "parse/react-native";
+import { LoaderOverlay, ErrorOverlay, CreateFarmContentForm, CreateServiceContentForm, CreateDealContentForm } from './components/MiscComponents';
+// import ImagePicker from 'react-native-image-crop-picker';
+import Parse from "parse/react-native";
 const Globals = require('../services/Globals');
 
 export default class CreateContentScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      fetching: false,
+      fetching: true,
+      isAdding: false,
       refreshControl: false,
       ajaxCallState: 200,
       ajaxCallError: null,
-      article: "",
+      contentExists: false,
+      item_id: null,
+      heading: "",
+      description: "",
+      price: "",
       measurements: [
         {
           id: 2,
@@ -73,12 +78,23 @@ export default class CreateContentScreen extends Component {
 
     this.initializePage = this.initializePage.bind(this);
     this.pickImageFromDeviceStorage = this.pickImageFromDeviceStorage.bind(this);
+    this.createNewFoodItem = this.createNewFoodItem.bind(this);
+    this.createNewServicePost = this.createNewServicePost.bind(this);
+    this.createNewDealerPost = this.createNewDealerPost.bind(this);
   }
   /* account codes */
   /* 001 - Buyer account */
   /* 002 - Farmer account */
   /* 003 - serviceProvider account (Vets and extension managers) */
   /* 004 - dealer account (Land sales and machinery dealers) */
+
+  componentDidMount() {
+    var currentUser = Parse.User.current();
+    if (currentUser) {
+      // do stuff with the user
+      this.setState({ fetching: false, user: currentUser })
+    }
+  }
 
   async initializePage(showLoader) {
 
@@ -95,6 +111,68 @@ export default class CreateContentScreen extends Component {
     });
   }
 
+  createNewFoodItem = () => {
+    this.setState({ isAdding: true });
+    var FoodItems = Parse.Object.extend("FoodItems");
+    var food = new FoodItems();
+    food.set("item_name", this.state.heading);
+    food.set("item_description", this.state.description);
+    food.set("price", Number(this.state.price));
+    food.set("tax", Number(this.state.tax));
+    food.set("category_id", this.state.user.get("farm_id"));
+    food.set("parent", this.state.user.get("farm_pointer_id"));
+    food.set("farmer", this.state.user);
+    food.save().then((results) => {
+      this.setState({ isAdding: false });
+      ShowToast("New content has been created successfully", "success");
+    }, (error) => {
+      this.setState({ isAdding: false });
+      ShowToast(error.message, "danger")
+    });
+  }
+
+  createNewServicePost = () => {
+    this.setState({ isAdding: true });
+    var Posts = Parse.Object.extend("Posts");
+    var post = new Posts();
+    var currentUser = Parse.User.current();
+    if (currentUser) {
+      post.set("user_pointer", currentUser);
+      post.set("user_id", currentUser.id);
+      post.set("header", this.state.heading);
+      post.set("body", this.state.description);
+      post.set("post_type", currentUser.get("account_code"));
+      post.save().then((results) => {
+        this.setState({ isAdding: false });
+        ShowToast("New content has been created successfully", "success");
+      }, (error) => {
+        this.setState({ isAdding: false });
+        ShowToast(error.message, "danger")
+      });
+    }
+  }
+
+  createNewDealerPost = () => {
+    this.setState({ isAdding: true });
+    var Posts = Parse.Object.extend("Posts");
+    var post = new Posts();
+    var currentUser = Parse.User.current();
+    if (currentUser) {
+      post.set("user_pointer", currentUser);
+      post.set("user_id", currentUser.id);
+      post.set("header", this.state.heading);
+      post.set("body", this.state.description);
+      post.set("more_info", this.state.price);
+      post.set("post_type", currentUser.get("account_code"));
+      post.save().then((results) => {
+        this.setState({ isAdding: false });
+        ShowToast("New content has been created successfully", "success");
+      }, (error) => {
+        this.setState({ isAdding: false });
+        ShowToast(error.message, "danger")
+      });
+    }
+  }
 
   render() {
     const { navigate } = this.props.navigation;
@@ -102,30 +180,64 @@ export default class CreateContentScreen extends Component {
     return (
       <StyleProvider style={getTheme(material)}>
         <Container style={[styles.bgWhite, { flex: 1 }]}>
-          <ScrollView>
-            <View style={{ flex: 1 }}>
-              {this.state.user.account_code == "002" ?
-                <CreateFarmContentForm
-                  user={this.state.user}
-                  unit={this.state.unit}
-                  measurements={this.state.measurements}
-                  setHeading={(value) => { this.setState({ heading: value }) }}
-                  setDescription={(value) => { this.setState({ description: value }) }}
-                  setStock={(value) => { this.setState({ stock: value }) }}
-                  setTax={(value) => { this.setState({ tax: value }) }}
-                  setPrice={(value) => { this.setState({ price: value }) }}
-                  setUnit={(value) => this.setState({ unit: value })}
-                  chooseImage={() => { this.pickImageFromDeviceStorage() }}
-                />
-                :
-                this.state.user.account_code == "003" ?
-                  <CreateServiceContentForm
-                    user={this.state.user}
-                  />
-                  : null
-              }
-            </View>
-          </ScrollView>
+          {this.state.fetching ?
+            <LoaderOverlay />
+            :
+            this.state.ajaxCallState == 200 ?
+              <ScrollView>
+                <View style={{ flex: 1 }}>
+                  {this.state.user.get("account_code") == Globals.ACCOUNT_TYPES.FARMER ?
+                    // farmer
+                    <CreateFarmContentForm
+                      user={this.state.user}
+                      isAdding={this.state.isAdding}
+                      unit={this.state.unit}
+                      measurements={this.state.measurements}
+                      foodItemName={this.state.heading}
+                      quantity={this.state.stock}
+                      unit={this.state.unit}
+                      price={this.state.price}
+                      tax={this.state.tax}
+                      description={this.state.description}
+                      setHeading={(value) => { this.setState({ heading: value }) }}
+                      setDescription={(value) => { this.setState({ description: value }) }}
+                      setStock={(value) => { this.setState({ stock: value }) }}
+                      setTax={(value) => { this.setState({ tax: value }) }}
+                      setPrice={(value) => { this.setState({ price: value }) }}
+                      setUnit={(value) => this.setState({ unit: value })}
+                      chooseImage={() => { this.pickImageFromDeviceStorage() }}
+                      createItem={() => { this.createNewFoodItem() }}
+                    />
+                    :
+                    this.state.user.get("account_code") == Globals.ACCOUNT_TYPES.SERVICE_PROVIDER ?
+                      // service provider
+                      <CreateServiceContentForm
+                        user={this.state.user}
+                        isAdding={this.state.isAdding}
+                        heading={this.state.heading}
+                        description={this.state.description}
+                        setHeading={(value) => { this.setState({ heading: value }) }}
+                        setDescription={(value) => { this.setState({ description: value }) }}
+                        createItem={() => { this.createNewServicePost() }}
+                      />
+                      :
+                      // dealer
+                      <CreateDealContentForm
+                        user={this.state.user}
+                        isAdding={this.state.isAdding}
+                        heading={this.state.heading}
+                        price={this.state.price}
+                        description={this.state.description}
+                        setHeading={(value) => { this.setState({ heading: value }) }}
+                        setDescription={(value) => { this.setState({ description: value }) }}
+                        setPrice={(value) => { this.setState({ price: value }) }}
+                        createItem={() => { this.createNewDealerPost() }}
+                      />
+                  }
+                </View>
+              </ScrollView>
+              : <ErrorOverlay />
+          }
         </Container>
       </StyleProvider>
     );

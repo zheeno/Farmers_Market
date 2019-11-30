@@ -2,11 +2,16 @@ import React, { Component } from 'react';
 import getTheme from '../../native-base-theme/components';
 import material from '../../native-base-theme/variables/material';
 import { StyleProvider, Container, Text, View, Button, Icon, Spinner } from 'native-base';
-import { ImageBackground } from 'react-native';
+import { ImageBackground, AsyncStorage } from 'react-native';
 import { styles } from '../../native-base-theme/variables/Styles';
 import { ShowToast } from '../services/ApiCaller';
 
-// import Parse from 'parse/react-native';
+import Parse from 'parse/react-native';
+const Globals = require('../services/Globals');
+
+Parse.setAsyncStorage(AsyncStorage);
+Parse.initialize(Globals.APPLICATION_KEY, Globals.JAVASCRIPT_KEY);
+Parse.serverURL = Globals.SERVER_URL;
 
 
 export default class SplashScreen extends Component {
@@ -15,63 +20,65 @@ export default class SplashScreen extends Component {
         this.state = {
             isFetching: false,
         }
+
         this.componentDidMount = this.componentDidMount.bind(this);
-        // this.checkSession = this.checkSession.bind(this);
+        this.checkSession = this.checkSession.bind(this);
     }
 
     componentDidMount() {
-        // let install = new Parse.Installation();
-        // install.set("deviceType", navigator.userAgent);
+        let install = new Parse.Installation();
+        install.set("deviceType", navigator.userAgent);
 
-        // install.save().then((resp) => {
-        //   console.log('Created install object', resp);
+        install.save().then((resp) => {
+            console.log('Created install object', resp);
 
-        //   this.setState({
-        //     result: 'New object created with objectId: ' + resp.id
-        //   })
-        // }, err => {
-        //   console.log('Error creating install object', err);
+            this.setState({
+                result: 'New object created with objectId: ' + resp.id
+            })
+        }, err => {
+            console.log('Error creating install object', err);
 
-        //   this.setState({
-        //     result: 'Failed to create new object, with error code: ' + err.message
-        //   })
-        // })
-        // this.setState({ isFetching: true });
-        // setTimeout(() => {
-        //   this.checkSession();
-        // }, 3000)
+            this.setState({
+                result: 'Failed to create new object, with error code: ' + err.message
+            })
+        })
+        this.setState({ isFetching: true });
+        setTimeout(() => {
+            this.checkSession();
+        }, 3000)
     }
 
-    //   checkSession() {
-    //     try {
-    //       Parse.User.currentAsync().then(user => {
-    //         if (user !== undefined || user !== null) {
-    //           // try to log user in with current token
-    //           try {
-    //             let sessionToken = user.getSessionToken();
-    //             this.setState({ isFetching: true });
-    //             Parse.User.become(sessionToken).then(object => {
-    //               // if session hasn't expired, grant user access
-    //               this.props.navigation.navigate('Home');
-    //             }).catch(error => {
-    //               // session expired
-    //               ShowToast('Session Expired', 'danger');
-    //               this.props.navigation.navigate('Login');
-    //             });
-    //           } catch (error) {
-    //             this.setState({ isFetching: false });
-    //             this.props.navigation.navigate('Login');
-    //           }
-    //         } else {
-    //           this.setState({ isFetching: false });
-    //           this.props.navigation.navigate('Login');
-    //         }
-    //       })
-    //     } catch (error) {
-    //       this.setState({ isFetching: false });
-    //       this.props.navigation.navigate('Login');
-    //     }
-    //   }
+    checkSession() {
+        try {
+            Parse.User.currentAsync().then(user => {
+                if (user !== undefined || user !== null) {
+                    // try to log user in with current token
+                    try {
+                        let sessionToken = user.getSessionToken();
+                        this.setState({ isFetching: true });
+                        Parse.User.become(sessionToken).then(object => {
+                            // if session hasn't expired, grant user access
+                            this.props.navigation.navigate('Home');
+                        }).catch(error => {
+                            // session expired
+                            ShowToast('Session Expired', 'danger');
+                            this.props.navigation.navigate('Login');
+                        });
+                    } catch (error) {
+                        this.setState({ isFetching: false });
+                        this.props.navigation.navigate('Login');
+                    }
+                } else {
+                    this.setState({ isFetching: false });
+                    this.props.navigation.navigate('Login');
+                }
+            })
+        } catch (error) {
+            this.setState({ isFetching: false });
+            this.props.navigation.navigate('Login');
+        }
+    }
+
     render() {
         const { navigate } = this.props.navigation;
 

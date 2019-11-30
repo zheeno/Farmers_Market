@@ -5,7 +5,6 @@
 	};
 	objectVersion = 46;
 	objects = {
-
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* Farmers_MarketTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* Farmers_MarketTests.m */; };
 		0309E8DF4E085B5EBE07209E /* libPods-Farmers_Market-tvOSTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F6055D965CEACE2C4B03F38 /* libPods-Farmers_Market-tvOSTests.a */; };
@@ -49,6 +48,13 @@
 			remoteGlobalIDString = 13B07F861A680F5B00A75B9A;
 			remoteInfo = Farmers_Market;
 		};
+		04C021C2238B06C00011075D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 04C021BE238B06C00011075D /* RNShimmer.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 5D7E4C681C88C61600B72F0C;
+			remoteInfo = RNShimmer;
+		};
 		2D02E4911E0B4A5D006451C7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
@@ -63,6 +69,7 @@
 		00E356EE1AD99517003FC87E /* Farmers_MarketTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Farmers_MarketTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* Farmers_MarketTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Farmers_MarketTests.m; sourceTree = "<group>"; };
+		04C021BE238B06C00011075D /* RNShimmer.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RNShimmer.xcodeproj; path = "../node_modules/react-native-shimmer/ios/RNShimmer.xcodeproj"; sourceTree = "<group>"; };
 		07309714CEDC8B4ED740E947 /* libPods-Farmers_MarketTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Farmers_MarketTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07F961A680F5B00A75B9A /* Farmers_Market.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Farmers_Market.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = Farmers_Market/AppDelegate.h; sourceTree = "<group>"; };
@@ -160,6 +167,14 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		04C021BF238B06C00011075D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				04C021C3238B06C00011075D /* libRNShimmer.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		13B07FAE1A68108700A75B9A /* Farmers_Market */ = {
 			isa = PBXGroup;
 			children = (
@@ -205,6 +220,7 @@
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				04C021BE238B06C00011075D /* RNShimmer.xcodeproj */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -383,6 +399,12 @@
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 04C021BF238B06C00011075D /* Products */;
+					ProjectRef = 04C021BE238B06C00011075D /* RNShimmer.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* Farmers_Market */,
@@ -392,6 +414,16 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		04C021C3238B06C00011075D /* libRNShimmer.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libRNShimmer.a;
+			remoteRef = 04C021C2238B06C00011075D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		00E356EC1AD99517003FC87E /* Resources */ = {

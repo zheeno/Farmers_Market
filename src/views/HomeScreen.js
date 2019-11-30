@@ -21,6 +21,7 @@ import {
   Left,
   Right,
   H3,
+  Spinner
 } from 'native-base';
 import {
   Platform,
@@ -29,24 +30,29 @@ import {
   TouchableOpacity,
   AsyncStorage,
   RefreshControl,
+  FlatList,
 } from 'react-native';
 import { styles } from '../../native-base-theme/variables/Styles';
 import { GetData, ShowToast } from '../services/ApiCaller';
 import { LoaderOverlay, ErrorOverlay, PostListItem } from './components/MiscComponents';
 // import axios from 'axios';
-// import Parse from 'parse/react-native';
+// import Shimmer from 'react-native-shimmer';
+import Parse from 'parse/react-native';
 const Globals = require('../services/Globals');
 
 export default class HomeScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      fetching: false,
+      fetching: true,
       refreshControl: false,
       ajaxCallState: 200,
       ajaxCallError: null,
       categories: [],
-      posts: [
+      skip: 0,
+      posts: [],
+      postIds: [],
+      _posts: [
         {
           id: 90,
           user_name: "Dimitri Ksovtri",
@@ -88,46 +94,149 @@ export default class HomeScreen extends Component {
     };
 
     this.initializePage = this.initializePage.bind(this);
+    this._openUserProfile = this._openUserProfile.bind(this);
+    this.likePost = this.likePost.bind(this);
+    this.unlikePost = this.unlikePost.bind(this);
+    this.loadMore = this.loadMore.bind(this);
   }
 
   componentDidMount() {
-    // StackActions.reset({
-    //   index: 0,
-    //   actions: [NavigationActions.navigate({ routeName: 'Home' })],
-    // });
-    // AsyncStorage.removeItem("cartToken");
-    // this.initializePage(true);
+    this.props.navigation.setParams({ openProfile: this._openUserProfile });
+    this.initializePage(true);
   }
 
+  async loadMore() {
+    this.setState({ loadingMore: true });
+    const idUser = await Parse.User.currentAsync();
+    // get posts
+    var Posts = Parse.Object.extend("Posts");
+    var f_query = new Parse.Query(Posts);
+    f_query.skip(this.state.posts.length);
+    f_query.limit(10);
+    f_query.descending("createdAt");
+    try {
+      const _posts = await f_query.find();
+      console.log("Posts", _posts)
+      this.setState({
+        posts: this.state.posts.concat(_posts),
+        fetching: false,
+        refreshControl: false,
+        loadingMore: false,
+        ajaxCallState: 200,
+        ajaxCallError: null,
+      });
+    } catch (error) {
+      this.setState({
+        ajaxCallState: "NET_ERR",
+        ajaxCallError: Globals.ERRORS.CONNECTION,
+        fetching: false,
+        loadingMore: false,
+      });
+    }
+  }
+
+
+  likePost = async (post, userLikedPost, callback) => {
+    try {
+      var currentUser = Parse.User.current();
+      if (currentUser) {
+        if (userLikedPost) {
+          // unlike post
+          this.unlikePost(post, callback);
+        } else {
+          try {
+            //check if user has liked the post
+            const Likes = Parse.Object.extend("Likes");
+            const likeChecker = new Parse.Query(Likes);
+            likeChecker.equalTo("post_id", post.id);
+            likeChecker.equalTo("liked_by_user_id", currentUser.id);
+            likeChecker.limit(1);
+            const result = await likeChecker.find().then((res) => {
+              if (res.length == 0) {
+                // like post
+                var like = new Likes();
+                like.set("post_pointer", post);
+                like.set("post_id", post.id);
+                like.set("liked_by_user_pointer", currentUser);
+                like.set("liked_by_user_id", currentUser.id);
+                like.save().then((result) => {
+                  callback(true)
+                }, (error) => {
+                  ShowToast(error.message, "danger");
+                });
+              } else {
+                this.unlikePost(post, callback);
+              }
+            })
+          } catch (e) {
+            ShowToast(e.message, "danger")
+            console.log(e.message)
+          }
+        }
+      }
+    } catch (e) {
+      ShowToast(e.message, "danger")
+      console.log(e.message)
+    }
+  }
+
+  unlikePost = async (post, callback) => {
+    try {
+      var currentUser = Parse.User.current();
+      if (currentUser) {
+        const Likes = Parse.Object.extend("Likes");
+        const likeChecker = new Parse.Query(Likes);
+        likeChecker.equalTo("post_id", post.id);
+        likeChecker.equalTo("liked_by_user_id", currentUser.id);
+        likeChecker.limit(1);
+        console.log("Unliking")
+        const result = await likeChecker.find().then((res) => {
+          if (res.length > 0) {
+            console.log("Unliked", res[0].id);
+            res[0].destroy().then(() => {
+              callback(false);
+            });
+          }
+        });
+      }
+    } catch (e) {
+      ShowToast(e.message, "danger");
+      console.log(e.message)
+    }
+  }
   async initializePage(showLoader) {
     this.setState({ fetching: showLoader, refreshControl: !showLoader });
-    // const idUser = await Parse.User.currentAsync();
-    // get hand picked food items
-    // var FoodItems = Parse.Object.extend("FoodItems");
-    // var f_query = new Parse.Query(FoodItems);
-    // f_query.limit(10);
-    // f_query.descending("createdAt");
-    // try {
-    //   const foodItems = await f_query.find();
-    //   // get categories
-    //   var Categories = Parse.Object.extend("Categories");
-    //   var c_query = new Parse.Query(Categories);
-    //   const categories = await c_query.find();
-    //   this.setState({
-    //     categories: categories,
-    //     handPicked: foodItems,
-    //     fetching: false,
-    //     ajaxCallState: 200,
-    //     ajaxCallError: null,
-    //     refreshControl: false
-    //   });
-    // } catch (error) {
-    //   this.setState({
-    //     ajaxCallState: "NET_ERR",
-    //     ajaxCallError: Globals.ERRORS.CONNECTION,
-    //     fetching: false
-    //   });
-    // }
+    // get posts
+    var Posts = Parse.Object.extend("Posts");
+    var f_query = new Parse.Query(Posts);
+    f_query.first(10);
+    f_query.descending("createdAt");
+    try {
+      const _posts = await f_query.find();
+      console.log("Posts", _posts)
+      this.setState({
+        posts: _posts,
+        fetching: false,
+        refreshControl: false,
+        loadingMore: false,
+        ajaxCallState: 200,
+        ajaxCallError: null,
+      });
+    } catch (error) {
+      this.setState({
+        ajaxCallState: "NET_ERR",
+        ajaxCallError: error.message,//Globals.ERRORS.CONNECTION,
+        fetching: false,
+        loadingMore: false,
+      });
+    }
+  }
+
+  _openUserProfile() {
+    this.props.navigation.navigate("Profile", {
+      headerTitle: "Dimitri Ksovtri",
+      userId: 2,
+    })
   }
 
   render() {
@@ -135,23 +244,16 @@ export default class HomeScreen extends Component {
 
     return (
       <StyleProvider style={getTheme(material)} >
-        <Container style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
           {this.state.fetching ? (
             <LoaderOverlay text={"We're preparing your screen..."} />
           ) :
             this.state.ajaxCallState == 200 ?
-              <ScrollView
-                style={[{ flex: 1 }, styles.bgWhite]}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={this.state.refreshControl}
-                    onRefresh={() => this.initializePage(Platform.IOS)}
-                  />
-                }>
+              <View style={{ marginBottom: 0, flex: 1, backgroundColor: "#FFF" }}>
                 <View
                   style={[
                     {
-                      flex: 1,
+                      // flex: 1,
                       paddingTop: 10,
                       paddingBottom: 20,
                       justifyContent: 'center',
@@ -186,7 +288,7 @@ export default class HomeScreen extends Component {
                         badge
                         iconRight
                         style={{ height: 40 }}
-                        onPress={() => navigate('Search')}>
+                        onPress={() => this.loadMore()}>
                         <Text
                           style={[
                             styles.greenText,
@@ -199,9 +301,10 @@ export default class HomeScreen extends Component {
                     </View>
                   </View>
                 </View>
-                <View>
+                <View style={{ flex: 1 }}>
                   {this.state.posts.length == 0 ?
                     <View style={{ paddingHorizontal: 20, paddingVertical: 100, justifyContent: "center", alignItems: "center" }}>
+                      <Icon name={"ios-information-circle"} style={{ fontSize: 60, color: "#777" }} />
                       <Text style={{ textAlign: "center", fontSize: 25, color: "#777" }}>There are no posts available{"\n"}We suggest following some services</Text>
                       <Button rounded style={[styles.bgLeafGreen, { marginTop: 20 }]} iconRight>
                         <Text>Find Services</Text>
@@ -209,20 +312,43 @@ export default class HomeScreen extends Component {
                       </Button>
                     </View>
                     :
-                    // {/* loop through posts */}
-                    this.state.posts.map(post => (
-                      <PostListItem post={post} />
-                    ))
+                    <View style={styles.bgWhite}>
+                      {/* loop through posts */}
+                      <FlatList
+                        data={this.state.posts}
+                        keyExtractor={item => item.id}
+                        onEndReached={() => this.loadMore()}
+                        onEndReachedThreshold={0}
+                        renderItem={({ item }) =>
+                          <PostListItem
+                            key={item.id}
+                            likePost={(_post, userLiked, callback) => this.likePost(_post, userLiked, callback)}
+                            thisPost={item}
+                            navToUserProfile={(userId, userName) => { navigate("Profile", { userId: userId, headerTitle: userName }) }} />
+                        }
+                        refreshControl={
+                          <RefreshControl
+                            refreshing={this.state.refreshControl}
+                            onRefresh={() => {
+                              this.initializePage(Platform.IOS)
+                            }}
+                          />
+                        }
+                      />
+                      {this.state.loadingMore ?
+                        <Spinner color={styles.greenText.color} size={20} />
+                        : null}
+                    </View>
                   }
                 </View>
-              </ScrollView>
+              </View>
               :
               <ErrorOverlay
                 title={"Notification"}
                 errorMessage={this.state.ajaxCallError}
                 action={() => this.initializePage(true)} />
           }
-        </Container>
+        </View>
       </StyleProvider >
     );
   }

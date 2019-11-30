@@ -1,6 +1,6 @@
 
 import React, { Component } from 'react';
-import { AsyncStorage, Platform } from 'react-native';
+import { AsyncStorage, Platform, TouchableOpacity } from 'react-native';
 import { Root, Button, Icon, View, Text, Thumbnail } from 'native-base';
 import { createStackNavigator } from 'react-navigation';
 import { createBottomTabNavigator, BottomTabBar } from 'react-navigation-tabs';
@@ -10,6 +10,10 @@ import SplashScreen from './src/views/SplashScreen';
 import LoginScreen from './src/views/LoginScreen';
 import HomeScreen from './src/views/HomeScreen';
 import CreateContentScreen from './src/views/CreateContentScreen';
+import EditContentScreen from './src/views/EditContentScreen';
+import UserProfilePage from './src/views/UserProfilePage';
+import NotificationScreen from './src/views/NotificationScreen';
+import FarmOrderScreen from './src/views/FarmOrderScreen';
 
 //  import Parse from 'parse/react-native';
 //  const Globals = require('./src/services/Globals');
@@ -58,19 +62,22 @@ const HomeStack = createStackNavigator({
     navigationOptions: ({ navigation }) => {
       return {
         headerLeft:
-          <Thumbnail
-            circular
-            small
-            style={{ marginLeft: 10 }}
-            source={require("./src/assets/img/white_onion_leaf.jpg")}
-          />,
-        headerTitle: "Home",
+          <TouchableOpacity
+            onPress={navigation.getParam('openProfile')}>
+            <Thumbnail
+              circular
+              small
+              style={{ marginLeft: 10 }}
+              source={require("./src/assets/img/white_onion_leaf.jpg")}
+            />
+          </TouchableOpacity>,
+        title: "Home",
         headerRight:
           <Button
             style={[styles.bgLeafGreen]}
             small
             icon
-            onPress={navigation.getParam('checkout')}>
+            onPress={navigation.getParam('openProfile')}>
             <Icon name={"ios-more"} />
           </Button>,
         headerStyle: {
@@ -83,14 +90,43 @@ const HomeStack = createStackNavigator({
       };
     },
   },
-  //    Category: {
-  //      screen: CategoryScreen,
-  //      navigationOptions: () => {
-  //        return {
-  //          header: null,
-  //        };
-  //      },
-  //    },
+  Profile: {
+    screen: UserProfilePage,
+    navigationOptions: ({ navigation }) => {
+      return {
+        title: navigation.getParam('headerTitle', 'Profile'),
+        headerStyle: {
+          backgroundColor: styles.bgLeafGreen.backgroundColor,
+        },
+        headerRight:
+          (navigation.getParam("user_id") == 2 ?
+            < Button
+              style={[styles.bgLeafGreen]}
+              small
+              icon
+              onPress={navigation.getParam('logout')} >
+              <Icon name={"ios-power"} />
+            </Button >
+            : null
+          ),
+      };
+    },
+  },
+  EditContent: {
+    screen: EditContentScreen,
+    navigationOptions: ({ navigation }) => {
+      return {
+        title: navigation.getParam('headerTitle', 'Edit Content'),
+        headerStyle: {
+          backgroundColor: styles.bgLeafGreen.backgroundColor,
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      };
+    },
+  },
   //    Farms: {
   //      screen: FarmsScreen,
   //      navigationOptions: () => {
@@ -150,9 +186,43 @@ const HomeStack = createStackNavigator({
 const NewContentStack = createStackNavigator({
   CreateContent: {
     screen: CreateContentScreen,
-    navigationOptions: () => {
+    navigationOptions: ({ navigation }) => {
       return {
-        headerTitle: "New Content",
+        title: 'New Content',
+        headerStyle: {
+          backgroundColor: styles.bgLeafGreen.backgroundColor,
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      };
+    },
+  },
+});
+
+// NotificationStack
+const NotificationStack = createStackNavigator({
+  Notifications: {
+    screen: NotificationScreen,
+    navigationOptions: ({ navigation }) => {
+      return {
+        title: 'Notifications',
+        headerStyle: {
+          backgroundColor: styles.bgLeafGreen.backgroundColor,
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      };
+    },
+  },
+  FarmOrder: {
+    screen: FarmOrderScreen,
+    navigationOptions: ({ navigation }) => {
+      return {
+        title: navigation.getParam('headerTitle', 'Order'),
         headerStyle: {
           backgroundColor: styles.bgLeafGreen.backgroundColor,
         },
@@ -185,13 +255,13 @@ const TabNavs = createBottomTabNavigator(
         ),
       },
     },
-    Profile: {
-      screen: NewContentStack,
+    Notifs: {
+      screen: NotificationStack,
       navigationOptions: {
         tabBarIcon: ({ tintColor }) => (
-          <Ionicons name={'ios-person'} size={25} color={tintColor} />
+          <Ionicons name={'ios-notifications'} size={25} color={tintColor} />
         ),
-        tabBarVisible: false,
+        // tabBarVisible: false,
       },
     },
   },
