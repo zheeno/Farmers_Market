@@ -14,8 +14,10 @@ import EditContentScreen from './src/views/EditContentScreen';
 import UserProfilePage from './src/views/UserProfilePage';
 import NotificationScreen from './src/views/NotificationScreen';
 import FarmOrderScreen from './src/views/FarmOrderScreen';
+import OrderScreen from './src/views/Orders/OrderScreen';
+import OrderListScreen from './src/views/Orders/OrderListScreen';
 
-//  import Parse from 'parse/react-native';
+import Parse from 'parse/react-native';
 //  const Globals = require('./src/services/Globals');
 
 //  Parse.setAsyncStorage(AsyncStorage);
@@ -93,13 +95,17 @@ const HomeStack = createStackNavigator({
   Profile: {
     screen: UserProfilePage,
     navigationOptions: ({ navigation }) => {
+      let headerTitle = navigation.getParam('headerTitle', 'Profile');
+      if (navigation.getParam('userId') == Parse.User.current().id) {
+        headerTitle = "My Profile";
+      }
       return {
-        title: navigation.getParam('headerTitle', 'Profile'),
+        title: headerTitle,
         headerStyle: {
           backgroundColor: styles.bgLeafGreen.backgroundColor,
         },
         headerRight:
-          (navigation.getParam("user_id") == 2 ?
+          (navigation.getParam("user_id") == Parse.User.current().id ?
             < Button
               style={[styles.bgLeafGreen]}
               small
@@ -127,14 +133,36 @@ const HomeStack = createStackNavigator({
       };
     },
   },
-  //    Farms: {
-  //      screen: FarmsScreen,
-  //      navigationOptions: () => {
-  //        return {
-  //          header: null,
-  //        };
-  //      },
-  //    },
+  Orders: {
+    screen: OrderListScreen,
+    navigationOptions: () => {
+      return {
+        title: "Orders",
+        headerStyle: {
+          backgroundColor: styles.bgLeafGreen.backgroundColor,
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      };
+    },
+  },
+  Order: {
+    screen: OrderScreen,
+    navigationOptions: ({ navigation }) => {
+      return {
+        title: navigation.getParam("headerTitle", "Order"),
+        headerStyle: {
+          backgroundColor: styles.bgLeafGreen.backgroundColor,
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      };
+    },
+  },
 },
   {
     initialRouteName: 'Home',

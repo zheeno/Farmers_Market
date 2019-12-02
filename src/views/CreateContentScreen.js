@@ -37,8 +37,11 @@ import {
 } from 'react-native';
 import { styles } from '../../native-base-theme/variables/Styles';
 import { GetData, ShowToast } from '../services/ApiCaller';
-import { LoaderOverlay, ErrorOverlay, CreateFarmContentForm, CreateServiceContentForm, CreateDealContentForm } from './components/MiscComponents';
+import { LoaderOverlay, ErrorOverlay, } from './components/MiscComponents';
 // import ImagePicker from 'react-native-image-crop-picker';
+import { CreateDealContentForm } from "./components/ContentCreatorForms/CreateDealContentForm";
+import { CreateServiceContentForm } from "./components/ContentCreatorForms/CreateServiceContentForm";
+import { CreateFarmContentForm } from "./components/ContentCreatorForms/CreateFarmContentForm";
 import Parse from "parse/react-native";
 const Globals = require('../services/Globals');
 

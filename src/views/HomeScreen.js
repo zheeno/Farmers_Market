@@ -34,7 +34,8 @@ import {
 } from 'react-native';
 import { styles } from '../../native-base-theme/variables/Styles';
 import { GetData, ShowToast } from '../services/ApiCaller';
-import { LoaderOverlay, ErrorOverlay, PostListItem } from './components/MiscComponents';
+import { LoaderOverlay, ErrorOverlay } from './components/MiscComponents';
+import { PostListItem } from './components/PostListItem';
 // import axios from 'axios';
 // import Shimmer from 'react-native-shimmer';
 import Parse from 'parse/react-native';
@@ -204,6 +205,7 @@ export default class HomeScreen extends Component {
       console.log(e.message)
     }
   }
+
   async initializePage(showLoader) {
     this.setState({ fetching: showLoader, refreshControl: !showLoader });
     // get posts
@@ -234,8 +236,8 @@ export default class HomeScreen extends Component {
 
   _openUserProfile() {
     this.props.navigation.navigate("Profile", {
-      headerTitle: "Dimitri Ksovtri",
-      userId: 2,
+      headerTitle: Parse.User.current().getUsername(),
+      userId: Parse.User.current().id,
     })
   }
 

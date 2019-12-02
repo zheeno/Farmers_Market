@@ -38,8 +38,9 @@ import {
 } from 'react-native';
 import { styles } from '../../native-base-theme/variables/Styles';
 import { GetData, ShowToast } from '../services/ApiCaller';
-import { LoaderOverlay, ErrorOverlay, PostListItem, FarmerCatalogItemList } from './components/MiscComponents';
+import { LoaderOverlay, ErrorOverlay, FarmerCatalogItemList } from './components/MiscComponents';
 // import ImagePicker from 'react-native-image-crop-picker';
+import { PostListItem } from './components/PostListItem';
 import Parse from "parse/react-native";
 const Globals = require('../services/Globals');
 
@@ -53,23 +54,11 @@ export default class UserProfilePage extends Component {
             ajaxCallError: null,
             userId: null,
             userName: null,
+            contentCounter: 0,
             user: {
                 account_code: "004"
             },
-            foodItems: [
-                {
-                    id: 3,
-                    item_name: "Fresh Water Yam"
-                },
-                {
-                    id: 39,
-                    item_name: "Succulent Oranges"
-                },
-                {
-                    id: 33,
-                    item_name: "Tomatoes"
-                }
-            ],
+            foodItems: [],
             posts: [
                 {
                     id: 90,
@@ -87,6 +76,11 @@ export default class UserProfilePage extends Component {
         }
         this.initializePage = this.initializePage.bind(this);
         this.logout = this.logout.bind(this);
+        this.fetchFarmContent = this.fetchFarmContent.bind(this);
+        this.likePost = this.likePost.bind(this);
+        this.unlikePost = this.unlikePost.bind(this);
+        this.fetchServicesContent = this.fetchServicesContent.bind(this);
+        this.fetchDealersContent = this.fetchDealersContent.bind(this);
     }
 
     componentDidMount() {
@@ -113,8 +107,168 @@ export default class UserProfilePage extends Component {
             ShowToast(error.message, 'danger');
         }
     }
-    initializePage() {
-        this.setState({ fetching: false, ajaxCallState: 200, ajaxCallError: Globals.ERRORS.CONNECTION });
+
+    likePost = async (post, userLikedPost, callback) => {
+        try {
+            var currentUser = Parse.User.current();
+            if (currentUser) {
+                if (userLikedPost) {
+                    // unlike post
+                    this.unlikePost(post, callback);
+                } else {
+                    try {
+                        //check if user has liked the post
+                        const Likes = Parse.Object.extend("Likes");
+                        const likeChecker = new Parse.Query(Likes);
+                        likeChecker.equalTo("post_id", post.id);
+                        likeChecker.equalTo("liked_by_user_id", currentUser.id);
+                        likeChecker.limit(1);
+                        const result = await likeChecker.find().then((res) => {
+                            if (res.length == 0) {
+                                // like post
+                                var like = new Likes();
+                                like.set("post_pointer", post);
+                                like.set("post_id", post.id);
+                                like.set("liked_by_user_pointer", currentUser);
+                                like.set("liked_by_user_id", currentUser.id);
+                                like.save().then((result) => {
+                                    callback(true)
+                                }, (error) => {
+                                    ShowToast(error.message, "danger");
+                                });
+                            } else {
+                                this.unlikePost(post, callback);
+                            }
+                        })
+                    } catch (e) {
+                        ShowToast(e.message, "danger")
+                        console.log(e.message)
+                    }
+                }
+            }
+        } catch (e) {
+            ShowToast(e.message, "danger")
+            console.log(e.message)
+        }
+    }
+
+    unlikePost = async (post, callback) => {
+        try {
+            var currentUser = Parse.User.current();
+            if (currentUser) {
+                const Likes = Parse.Object.extend("Likes");
+                const likeChecker = new Parse.Query(Likes);
+                likeChecker.equalTo("post_id", post.id);
+                likeChecker.equalTo("liked_by_user_id", currentUser.id);
+                likeChecker.limit(1);
+                console.log("Unliking")
+                const result = await likeChecker.find().then((res) => {
+                    if (res.length > 0) {
+                        console.log("Unliked", res[0].id);
+                        res[0].destroy().then(() => {
+                            callback(false);
+                        });
+                    }
+                });
+            }
+        } catch (e) {
+            ShowToast(e.message, "danger");
+            console.log(e.message)
+        }
+    }
+
+    async initializePage() {
+        // fetch user data
+        try {
+            const account = new Parse.Query(Parse.User);
+            account.equalTo("username", this.state.userName);
+            account.limit(1);
+            const user = await account.first().then(response => {
+                // fetch posts made by the user WRT account code
+                const acc_code = response.get("account_code");
+                switch (acc_code) {
+                    case Globals.ACCOUNT_TYPES.FARMER:
+                        this.fetchFarmContent(response.get("farm_id"), (farmFoodItems) => {
+                            this.setState({
+                                user: response,
+                                foodItems: farmFoodItems,
+                                contentCounter: farmFoodItems.length,
+                                fetching: false,
+                                refreshControl: false,
+                                ajaxCallState: 200,
+                                ajaxCallError: null,
+                            });
+                        })
+                        break;
+                    case Globals.ACCOUNT_TYPES.SERVICE_PROVIDER:
+                        this.fetchServicesContent(response.id, (services) => {
+                            this.setState({
+                                user: response,
+                                posts: services,
+                                contentCounter: services.length,
+                                fetching: false,
+                                refreshControl: false,
+                                ajaxCallState: 200,
+                                ajaxCallError: null,
+                            });
+                        });
+                        break;
+                    case Globals.ACCOUNT_TYPES.DEALER:
+                        this.fetchDealersContent(response.id, (deals) => {
+                            this.setState({
+                                user: response,
+                                posts: deals,
+                                contentCounter: deals.length,
+                                fetching: false,
+                                refreshControl: false,
+                                ajaxCallState: 200,
+                                ajaxCallError: null,
+                            });
+                        });
+                        break;
+                    default:
+                        // do nothing
+                        break;
+                }
+            });
+        } catch (error) {
+            this.setState({
+                fetching: false,
+                refreshControl: false,
+                ajaxCallState: "NET_ERR",
+                ajaxCallError: error.message,
+            });
+            ShowToast(error.message, 'danger');
+        }
+    }
+
+    fetchFarmContent = async (farm_id, successCallback) => {
+        const FoodItems = Parse.Object.extend("FoodItems");
+        const query = new Parse.Query(FoodItems);
+        query.equalTo("category_id", farm_id);
+        const items = await query.find().then(response => {
+            successCallback(response);
+        });
+    }
+
+    fetchServicesContent = async (user_id, successCallback) => {
+        const Posts = Parse.Object.extend("Posts");
+        const query = new Parse.Query(Posts);
+        query.equalTo("user_id", user_id);
+        query.equalTo("post_type", Globals.ACCOUNT_TYPES.SERVICE_PROVIDER);
+        const items = await query.find().then(response => {
+            successCallback(response);
+        });
+    }
+
+    fetchDealersContent = async (user_id, successCallback) => {
+        const Posts = Parse.Object.extend("Posts");
+        const query = new Parse.Query(Posts);
+        query.equalTo("user_id", user_id);
+        query.equalTo("post_type", Globals.ACCOUNT_TYPES.DEALER);
+        const items = await query.find().then(response => {
+            successCallback(response);
+        });
     }
 
     render() {
@@ -134,9 +288,9 @@ export default class UserProfilePage extends Component {
                                             <Thumbnail large circular source={require("../assets/img/white_onion_leaf.jpg")} />
                                         </View>
                                         <View style={{ flex: 3, paddingHorizontal: 5 }} >
-                                            <Text style={{ fontSize: 20 }} numberOfLines={1}>{this.state.userName}</Text>
-                                            <Text note style={{ fontSize: 14 }} numberOfLines={1}>dimitri_ksovtri@mail.ru</Text>
-                                            <Badge note style={[styles.bgLeafGreen, { fontSize: 14 }]}><Text>Farmer</Text></Badge>
+                                            <Text style={{ fontSize: 20 }} numberOfLines={1}>{this.state.user.get("username")}</Text>
+                                            <Text note style={{ fontSize: 14, marginBottom: 10 }} numberOfLines={1}>{this.state.user.get("email")}</Text>
+                                            <Badge note style={[styles.bgLeafGreen, { fontSize: 14 }]}><Text>{this.state.user.get("account_type")}</Text></Badge>
                                         </View>
                                     </View>
                                     <View style={{ flexDirection: "row", marginTop: 20 }}>
@@ -149,13 +303,21 @@ export default class UserProfilePage extends Component {
                                             <Text note>Following</Text>
                                         </View>
                                         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                                            <Text style={{ fontSize: 20 }} numberOfLines={1}>30</Text>
+                                            <Text style={{ fontSize: 20 }} numberOfLines={1}>{this.state.contentCounter}</Text>
                                             <Text note>Posts</Text>
                                         </View>
                                     </View>
                                 </View>
                                 <View style={{ flex: 4, paddingHorizontal: 5 }}>
-                                    {this.state.user.account_code == "002" || this.state.user.account_code == "004" ?
+                                    {(this.state.user.get("account_code") == Globals.ACCOUNT_TYPES.FARMER && this.state.user.id == Parse.User.current().id) &&
+                                        <View style={{ padding: 5 }}>
+                                            <Button onPress={() => navigate("Orders")} light style={[styles.bgGrey]} iconRight>
+                                                <Text>View orders</Text>
+                                                <Icon name={"ios-arrow-forward"} />
+                                            </Button>
+                                        </View>
+                                    }
+                                    {this.state.user.get("account_code") == Globals.ACCOUNT_TYPES.FARMER || this.state.user.get("account_code") == Globals.ACCOUNT_TYPES.DEALER ?
                                         // display catalog
                                         <FarmerCatalogItemList
                                             foodItems={this.state.foodItems}
@@ -164,13 +326,12 @@ export default class UserProfilePage extends Component {
                                             navigate={navigate}
                                         />
                                         :
-                                        <ScrollView
-                                            refreshControl={
-                                                <RefreshControl
-                                                    refreshing={this.state.refreshControl}
-                                                    onRefresh={() => this.initializePage(false)}
-                                                />
-                                            }>
+                                        <ScrollView refreshControl={
+                                            <RefreshControl
+                                                refreshing={this.state.refreshControl}
+                                                onRefresh={() => this.initializePage(false)}
+                                            />
+                                        }>
                                             {/* // display posts */}
                                             {this.state.posts.length == 0 ?
                                                 <View style={{ paddingHorizontal: 20, paddingVertical: 100, justifyContent: "center", alignItems: "center" }}>
@@ -180,7 +341,14 @@ export default class UserProfilePage extends Component {
                                                 :
                                                 // {/* loop through posts */}
                                                 this.state.posts.map(post => (
-                                                    <PostListItem key={post.id} post={post} />
+                                                    <PostListItem
+                                                        key={post.id}
+                                                        thisPost={post}
+                                                        likePost={(_post, userLiked, callback) => this.likePost(_post, userLiked, callback)}
+                                                        navToUserProfile={(userId, userName) => {
+                                                            navigate("Profile", { userId: userId, headerTitle: userName })
+                                                        }
+                                                        } />
                                                 ))}
                                         </ScrollView>
                                     }
