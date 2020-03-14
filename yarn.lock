@@ -1152,9 +1152,9 @@ acorn-walk@^6.0.1:
   integrity sha512-7evsyfH1cLOCdAzZAd43Cic04yKydNx0cF+7tiA19p1XnLLPU4dpCQOqpjqwokFe//vS0QqfqqjCS2JkiIs0cA==
 
 acorn@^5.5.3:
-  version "5.7.3"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-5.7.3.tgz#67aa231bf8812974b85235a96771eb6bd07ea279"
-  integrity sha512-T/zvzYRfbVojPWahDsE5evJdHb3oJoQfFbsrKM7w5Zcs++Tr257tia3BmMP8XYVjp1S9RZXQMh7gao96BlqZOw==
+  version "5.7.4"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-5.7.4.tgz#3e8d8a9947d0599a1796d10225d7432f4a4acf5e"
+  integrity sha512-1D++VG7BhrtvQpNbBzovKNc1FLGGEE/oGe7b9xJm/RFHMBeUaUGpluV9RLjZa47YFdPcDAenEYuq9pQPcMdLJg==
 
 acorn@^6.0.1:
   version "6.3.0"
@@ -5560,10 +5560,10 @@ react-native-screens@1.0.0-alpha.23, react-native-screens@^1.0.0-alpha.11:
   dependencies:
     debounce "^1.2.0"
 
-react-native-shimmer@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/react-native-shimmer/-/react-native-shimmer-0.5.0.tgz#db2839bb90aec53a0dd442bbf44c067c4c4a1c61"
-  integrity sha512-Ws9L1atcAVuOl3A2//S1ervNCbCOeqSMuENYRAZ+yCA8Emgb6Li0wmNnokqhKFvM4Pf5jdnO1pjgq0bNwlbu6Q==
+react-native-shimmer@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/react-native-shimmer/-/react-native-shimmer-0.4.1.tgz#4221a4b19e9001c1a8afd0cee0979e1ede6e8a44"
+  integrity sha512-f2SitWHcO9BaVazmaRmqwlgq56TUy+fdMQGfDyqxdVWDcO7QaxCSoB2B2Bx5dA9W2FoyincrJNFiM0Pk1OmRBQ==
   dependencies:
     prop-types "^15.6.0"
 
