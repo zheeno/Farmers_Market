@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "native-base": "^2.13.8",
-    "parse": "^2.8.0",
+    "parse": "^2.10.0",
     "parse-react": "^0.4.2",
     "prop-types": "^15.7.2",
     "react": "16.9.0",
