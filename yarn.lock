@@ -3103,9 +3103,9 @@ hoist-non-react-statics@^2.2.0, hoist-non-react-statics@^2.3.1, hoist-non-react-
   integrity sha512-rqcy4pJo55FTTLWt+bU8ukscqHeE/e9KWvsOW2b/a3afxQZhwkQdT1rPPCJ0rYXdj4vNcasY8zHTH+jF/qStxw==
 
 hosted-git-info@^2.1.4:
-  version "2.8.5"
-  resolved "https://registry.yarnpkg.com/hosted-git-info/-/hosted-git-info-2.8.5.tgz#759cfcf2c4d156ade59b0b2dfabddc42a6b9c70c"
-  integrity sha512-kssjab8CvdXfcXMXVcvsXum4Hwdq9XGtRD3TteMEvEbq0LXyiNQr6AprqKqfeaDXze7SxWvRxdpwE6ku7ikLkg==
+  version "2.8.9"
+  resolved "https://registry.yarnpkg.com/hosted-git-info/-/hosted-git-info-2.8.9.tgz#dffc0bf9a21c02209090f2aa69429e1414daf3f9"
+  integrity sha512-mxIDAb9Lsm6DoOJ7xH+5+X4y1LU/4Hi50L9C5sIswK3JzULS4bwk1FvjdBgvYR4bzT4tuUQiC15FE2f5HbLvYw==
 
 html-encoding-sniffer@^1.0.2:
   version "1.0.2"
@@ -5560,10 +5560,10 @@ react-native-screens@1.0.0-alpha.23, react-native-screens@^1.0.0-alpha.11:
   dependencies:
     debounce "^1.2.0"
 
-react-native-shimmer@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/react-native-shimmer/-/react-native-shimmer-0.5.0.tgz#db2839bb90aec53a0dd442bbf44c067c4c4a1c61"
-  integrity sha512-Ws9L1atcAVuOl3A2//S1ervNCbCOeqSMuENYRAZ+yCA8Emgb6Li0wmNnokqhKFvM4Pf5jdnO1pjgq0bNwlbu6Q==
+react-native-shimmer@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/react-native-shimmer/-/react-native-shimmer-0.4.1.tgz#4221a4b19e9001c1a8afd0cee0979e1ede6e8a44"
+  integrity sha512-f2SitWHcO9BaVazmaRmqwlgq56TUy+fdMQGfDyqxdVWDcO7QaxCSoB2B2Bx5dA9W2FoyincrJNFiM0Pk1OmRBQ==
   dependencies:
     prop-types "^15.6.0"
 
